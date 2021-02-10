@@ -6,21 +6,25 @@ export class Home{
     @PrimaryGeneratedColumn('uuid')
     id:string;
 
-    @Generated()
+    @Column()
+    @Generated('increment')
     serial:number;
 
     @Column()
-    temperature:number;
+    temperature:String;
 
     @Column()
-    humidity:number;
+    humidity:String;
 
     @Column()
-    preasure:number;
+    preasure:String;
 
     @Column()
-    gasResestance:number;
+    gasResestance:String;
 
     @Column()
-    batteryVoltage:number;
+    batteryVoltage:String;
+
+    @Column()
+    date:Date;
 }

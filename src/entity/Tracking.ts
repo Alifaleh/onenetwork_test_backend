@@ -2,44 +2,45 @@ import {Entity, PrimaryGeneratedColumn, Column, Generated } from 'typeorm';
 
 
 @Entity()
-export class Traking{
+export class Tracking{
     @PrimaryGeneratedColumn('uuid')
     id: string;
 
+    @Column()
     @Generated('increment')
     serial: number;
 
-    @Column()
-    lan:number;
+    @Column("decimal")
+    lon:number;
 
-    @Column()
+    @Column("decimal")
     lat:number;
 
-    @Column()
+    @Column("decimal")
     alt:number;
 
     @Column()
     date:Date;
 
-    @Column()
+    @Column("decimal")
     batteryVoltage:number;
 
-    @Column()
+    @Column("decimal")
     accelerometerX:number;
 
-    @Column()
+    @Column("decimal")
     accelerometerY:number;
 
-    @Column()
+    @Column("decimal")
     accelerometerZ:number;
 
-    @Column()
+    @Column("decimal")
     gyrometerX:number;
 
-    @Column()
+    @Column("decimal")
     gyrometerY:number;
 
-    @Column()
+    @Column("decimal")
     gyrometerZ:number;
 
 }
