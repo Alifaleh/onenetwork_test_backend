@@ -54,8 +54,8 @@ createConnection().then(async connection => {
             date = new Date(Date.now());
             await addLocation(location,gyrometer,accelerometer,trackingBattery, date);
             newLocationRecieved = true;
-
             let lastLocation = await getLastLocation();
+            lastLocation.date = Math.floor(+lastLocation.date / 1000);
             io.to(socketId).emit('setLocation', lastLocation);
             
         };
