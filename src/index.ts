@@ -2,7 +2,7 @@ import "reflect-metadata";
 import {createConnection} from "typeorm";
 import bodyParser = require('body-parser');
 
-import {addLocation, addHomeReading, getLastLocation} from './models/database';
+import {addLocation, addHomeReading, getLastLocation, getHomeList, getHomeData} from './models/database';
 import { Socket } from "dgram";
 
 const app = require('express')();
@@ -52,7 +52,7 @@ createConnection().then(async connection => {
             accelerometer.z = JSON.parse(req.body.objectJSON)['accelerometer']['3'].z;
             trackingBattery = JSON.parse(req.body.objectJSON)['analogInput']['8'];
             date = new Date(Date.now());
-            addLocation(location,gyrometer,accelerometer,trackingBattery, date);
+            await addLocation(location,gyrometer,accelerometer,trackingBattery, date);
             newLocationRecieved = true;
 
             let lastLocation = await getLastLocation();
@@ -72,7 +72,7 @@ createConnection().then(async connection => {
 
     
     
-    app.post('/sethome', (req, res) => {
+    app.post('/sethome', async (req, res) => {
         let temperature = "0 C";
         let humidity = "0 %RH";
         let preassure = "0 hPa";
@@ -88,13 +88,16 @@ createConnection().then(async connection => {
             gasResestance = (JSON.parse(req.body.objectJSON)["analogInput"]["4"]).toString()+" kohms";
             homeBattery = (JSON.parse(req.body.objectJSON)["analogInput"]["8"]).toString()+" V";
             date = new Date(Date.now());
-            addHomeReading(temperature, humidity, preassure, gasResestance, homeBattery, date);
+            await addHomeReading(temperature, humidity, preassure, gasResestance, homeBattery, date);
             newHomeReadingRecieved = true;
+            setTimeout(async ()=>{
+                let homeList = await getHomeList();
+                homeList[0].date = Math.floor(+homeList[0].date / 1000);
+                io.to(socketId).emit('addNewReading',homeList[0])
+            }, 500)
         }
 
     })
-
-
 
 
     io.on('connection', (socket) => {
@@ -105,6 +108,20 @@ createConnection().then(async connection => {
             let lastLocation = await getLastLocation();
             lastLocation.date = Math.floor(+lastLocation.date / 1000);
             socket.emit('setLocation', lastLocation);
+        })
+
+        socket.on('getHomeList', async(data) => {
+            let homeList = await getHomeList();
+            homeList.forEach((reading,index)=>{
+                homeList[index].date = Math.floor(+homeList[index].date / 1000);
+            })
+            socket.emit('setHomeList', homeList);
+        })
+
+        socket.on('getHomeData', async data => {
+            let homeData = await getHomeData(data);
+            homeData.date = Math.floor(+homeData.date / 1000);
+            socket.emit('setHomeData', homeData);
         })
 
     });

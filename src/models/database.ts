@@ -45,3 +45,27 @@ export const getLastLocation = async () => {
     .getRawOne();
     return lastLocation;
 }
+
+
+export const getHomeList = async () => {
+    const homelist = await getConnection()
+    .createQueryBuilder()
+    .select(['id', 'date'])
+    .from(Home, 'home')
+    .orderBy('date', 'DESC')
+    .getRawMany();
+    return homelist;
+}
+
+
+export const getHomeData = async (id) => {
+    const homeData = await getConnection()
+    .createQueryBuilder()
+    .select()
+    .from(Home, 'home')
+    .where(`id = '${id}'`)
+    .getRawOne()
+
+    console.log(homeData);
+    return homeData;
+}
