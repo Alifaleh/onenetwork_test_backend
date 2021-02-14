@@ -3,11 +3,12 @@ import {createConnection} from "typeorm";
 import bodyParser = require('body-parser');
 
 import {addLocation, addHomeReading, getLastLocation, getHomeList, getHomeData} from './models/database';
-import { Socket } from "dgram";
 
 const app = require('express')();
 const http = require('http').Server(app);
-const io = require('socket.io')(http);
+import IO = require('socket.io');
+
+const io = IO(http);
 
 const port = 3000;
 
@@ -16,10 +17,9 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 
 
-let newLocationRecieved:Boolean = true;
-let newHomeReadingRecieved:Boolean = true;
 
-let socketId = '';
+
+let socketId = [];
 
 createConnection().then(async connection => {
 
@@ -53,10 +53,11 @@ createConnection().then(async connection => {
             trackingBattery = JSON.parse(req.body.objectJSON)['analogInput']['8'];
             date = new Date(Date.now());
             await addLocation(location,gyrometer,accelerometer,trackingBattery, date);
-            newLocationRecieved = true;
             let lastLocation = await getLastLocation();
             lastLocation.date = Math.floor(+lastLocation.date / 1000);
-            io.to(socketId).emit('setLocation', lastLocation);
+            socketId.forEach(id=>{
+                io.to(id).emit('setLocation', lastLocation);
+            });
             
         };
 
@@ -89,11 +90,12 @@ createConnection().then(async connection => {
             homeBattery = (JSON.parse(req.body.objectJSON)["analogInput"]["8"]).toString()+" V";
             date = new Date(Date.now());
             await addHomeReading(temperature, humidity, preassure, gasResestance, homeBattery, date);
-            newHomeReadingRecieved = true;
             setTimeout(async ()=>{
                 let homeList = await getHomeList();
                 homeList[0].date = Math.floor(+homeList[0].date / 1000);
-                io.to(socketId).emit('addNewReading',homeList[0])
+                socketId.forEach(id=>{
+                    io.to(id).emit('addNewReading',homeList[0])
+                })
             }, 500)
         }
 
@@ -103,7 +105,7 @@ createConnection().then(async connection => {
     io.on('connection', (socket) => {
         socket.emit('connect', 'connect');
         console.log('a user connected');
-        socketId = socket.id;
+        socketId.push(socket.id);
         socket.on('getLocation', async (data)=>{
             let lastLocation = await getLastLocation();
             lastLocation.date = Math.floor(+lastLocation.date / 1000);
@@ -124,12 +126,18 @@ createConnection().then(async connection => {
             socket.emit('setHomeData', homeData);
         })
 
+        socket.on('disconnect', (socket) => {
+            console.log('disconnected')
+        })
+
     });
+
 
 
 
     http.listen(port, ()=>{
         console.log(`Server is up at port ${port}`)
+        console.log(new Date(Date.now()));
     })
 
 
