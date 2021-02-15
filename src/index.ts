@@ -29,10 +29,6 @@ createConnection().then(async connection => {
     })
 
 
-
-
-
-
     app.post('/settracking', async (req, res) => {
         if(JSON.parse(req.body.objectJSON)['gpsLocation']){
             console.log('recieved location')
@@ -63,12 +59,6 @@ createConnection().then(async connection => {
 
         res.sendStatus(200);
     });
-
-
-
-
-
-
 
 
     
@@ -106,6 +96,7 @@ createConnection().then(async connection => {
         socket.emit('connect', 'connect');
         console.log('a user connected');
         socketId.push(socket.id);
+        console.log(socketId)
         socket.on('getLocation', async (data)=>{
             let lastLocation = await getLastLocation();
             lastLocation.date = Math.floor(+lastLocation.date / 1000);
@@ -128,6 +119,8 @@ createConnection().then(async connection => {
 
         socket.on('disconnect', (socket) => {
             console.log('disconnected')
+            socketId.splice(socketId.indexOf(socket.id),1)
+            console.log(socketId)
         })
 
     });
@@ -137,7 +130,7 @@ createConnection().then(async connection => {
 
     http.listen(port, ()=>{
         console.log(`Server is up at port ${port}`)
-        console.log(new Date(Date.now()));
+        console.log('Started at : '+new Date(Date.now()));
     })
 
 
