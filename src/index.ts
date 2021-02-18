@@ -7,6 +7,7 @@ import {addLocation, addHomeReading, getLastLocation, getHomeList, getHomeData} 
 const app = require('express')();
 const http = require('http').Server(app);
 import IO = require('socket.io');
+import { url } from "inspector";
 
 const io = IO(http);
 
@@ -21,7 +22,14 @@ app.use(bodyParser.urlencoded({ extended: false }));
 
 let socketId = [];
 
-createConnection().then(async connection => {
+createConnection({
+        type: 'postgres',
+        host: "192.168.255.163",
+        username: "onenetwork",
+        database: "onenetwork_test",
+        password: "admin",
+        port: 5432,
+    }).then(async connection => {
 
 
     app.get('/', (req,res)=>{
